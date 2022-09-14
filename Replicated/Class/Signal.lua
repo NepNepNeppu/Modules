@@ -5,8 +5,6 @@ local RunService = game:GetService("RunService")
 --initialize default data
 local InitData = {}
 
-InitData.server = false
-
 InitData.Binded = {}
 InitData.Remote = {}
 

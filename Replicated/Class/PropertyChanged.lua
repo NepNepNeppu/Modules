@@ -1,80 +1,3 @@
---[[
-class Object
-Description:
-	Fire a function anytime a property selected changes
-    One Object can have one or multiple property functions
-
-API:
-	Object = Object.new(Instance,string?)
-		Creates a new object collector
-		{
-			identification = strin
-			assignedInstance = Instance,
-			Properties = dictionary,
-			Connections = dictionary,
-			isrunning = boolean,
-            OnAdded = RBXScriptConnection,
-            OnRemoved = RBXScriptConnection,
-			Object = methods
-		}
-    Object:RemoveProperties(dictionary)
-        Removes any currently running or static property functions
-		{
-			dictionary
-		}
-    Object:AddProperties(dictionary)
-        Adds and initalizes new properties
-		{
-			dictionary
-		}
-	Object:OnEvent(string)
-		Connection storage meant to store RBXScriptConnections for Object using the name [string]
-		{
-			add = function,
-			Disconnect = function
-		}
-	Object:GetPackage(string)
-		Get dictionary of RBXScriptConnections from Object with the name [string]
-		{
-			new = function,
-			Disconnect = method,
-			dictionary
-		}
-    Object:ManualUpdate(dictionary)
-        Manually update property functions
-		{
-			dictionary
-		}
-	Object:Restore(Instance)
-		Restores all traits of the object in the DataModel and in the Object
-    Object:Pause()
-        Pause all active running properties
-    Object:UnPause()
-        Resume all paused properties
-	Object:Quit(string?)
-		Removes all Connections and Properties
-
-Usage :
-
-local Handler = Property.new(game.Workspace.Restoration,"CustomName")
-
-Handler:AddProperties {
-	Size = function()
-		print(Handler.assignedInstance.Size)
-	end,
-	Position = function()
-		print(Handler.assignedInstance.Position)
-	end,
-}
-
-Handler:OnEvent "PartChanged" {
-	Handler.OnRemoved:Connect(function()
-		Handler:Quit()
-	end),
-}
-
-]]
-
 --[[TODO:
     Rewrite "Changed" to be reliable and as a method
     add custom error messages
@@ -90,29 +13,29 @@ function hasProperty(object : Instance,property : string)
 end
 
 function getTable(properties : {any})
-    local newTable = {}
+	local newTable = {}
 
-    local function loopThrough(addedNew,newIndex : string?)
-        for index,value in pairs(addedNew) do
-            if typeof(value) == "table" then
-                loopThrough(value,newIndex)
-            elseif typeof(value) ~= "table" then
-                newTable[newIndex or index] = value
-            end
-        end
-    end
+	local function loopThrough(addedNew,newIndex : string?)
+		for index,value in pairs(addedNew) do
+			if typeof(value) == "table" then
+				loopThrough(value,newIndex)
+			elseif typeof(value) ~= "table" then
+				newTable[newIndex or index] = value
+			end
+		end
+	end
 
-    loopThrough(properties)
+	loopThrough(properties)
 
-    return newTable
+	return newTable
 end
 
 function PropertyInit(self,properties : {any},kick : string?) --kick is a string OR a function
-    if typeof(properties) ~= "table" then return end
+	if typeof(properties) ~= "table" then return end
 
 	local function checkAndApply(newProperty : string,fire)       
-		if (hasProperty(self.assignedInstance,newProperty) and self.Properties[newProperty] == nil) or kick == true then
-        	self.Properties[newProperty] = {fire,kick}
+		if (hasProperty(self.assignedInstance,newProperty) and self.Properties[newProperty] == nil) or kick then
+			self.Properties[newProperty] = {fire,kick}
 		end
 	end
 
@@ -161,13 +84,13 @@ end
 local Object = {}
 Object.__index = Object
 
-    Object.Contents = {}
+Object.Contents = {}
 
 	function Object.new(Label : Instance,name : string?)
-		if Object.Contents[name or Label] then return Object.Contents[name or Label] end
-        if Label == nil or typeof(Label) ~= "Instance" then return end
+		if Object.Contents[name or Label] then return Object.Contents[name or Label],true end
+		if Label == nil or typeof(Label) ~= "Instance" then return Object.Contents[name or Label] or nil,Object.Contents[name or Label] and true or false end
 
-		Object.Contents[name or Label] = "loading"
+		Object.Contents[name or Label] = setmetatable({"Loading"},Object)
 
 		local OnRemoved = Instance.new("BindableEvent")
 		local OnAdded = Instance.new("BindableEvent")
@@ -184,16 +107,16 @@ Object.__index = Object
 			isrunning = true,
 			Properties = {},
 			Connections = {},
-            ["OnAdded"] = OnAdded.Event,
-            ["OnRemoved"] = OnRemoved.Event,
+			["OnAdded"] = OnAdded.Event,
+			["OnRemoved"] = OnRemoved.Event,
 			__data = { --//Intended to be used by the methods
-                Runner = {Difference = {}},
+				Runner = {Difference = {}},
 				wasrunning = true,
 				name = name or nil,
 			}
 		}, Object)
 
-        self.__data.Runner.Stepped = game:GetService("RunService").Stepped:Connect(function()
+		self.__data.Runner.Stepped = game:GetService("RunService").Stepped:Connect(function()
 			if self.isrunning == false then return end
 			for property,data in pairs(self.Properties) do
 				local success = hasProperty(self.assignedInstance,property)
@@ -213,7 +136,7 @@ Object.__index = Object
 								fire()
 								self.Properties[property] = {kick,nil}
 							end
-						--rewrite this to be reliable
+							--rewrite this to be reliable
 						elseif self.assignedInstance[property] ~= self.__data.Runner.Difference[property]  then
 							if self.__data.Runner.Difference[property] == nil then
 								self.__data.Runner.Difference[property] = self.assignedInstance[property]
@@ -246,37 +169,37 @@ Object.__index = Object
 			OnAdded:Fire(object)
 		end)
 
-        Object.Contents[name or Label] = self
+		Object.Contents[name or Label] = self
 
 		return self
 	end
 
 	function Object:AddProperties(properties : {any})
-        if typeof(properties) ~= "table" then return end
+		if typeof(properties) ~= "table" then return end
 
-        local removeList = {}
+		local removeList = {}
 		for propertyAll,fire in pairs(getTable(properties)) do
-            if hasProperty(self.assignedInstance,propertyAll) then
-                if self.Properties[propertyAll] and self.assignedInstance then
+			if hasProperty(self.assignedInstance,propertyAll) then
+				if self.Properties[propertyAll] and self.assignedInstance then
 					warn('Cannot add "'..propertyAll..'" for "'..self.assignedInstance.Name..'"'.." because it is already running")	
 				else
-				    PropertyInit(self,{[propertyAll] = fire})
-                    removeList[propertyAll] = fire
-			    end
-            end
+					PropertyInit(self,{[propertyAll] = fire})
+					removeList[propertyAll] = fire
+				end
+			end
 		end
 
-        return removeList
+		return removeList
 	end
 
 	function Object:RemoveProperties(properties : {any})
-        if typeof(properties) ~= "table" then
+		if typeof(properties) ~= "table" then
 			properties = self.Properties
 		else
 			properties = getTable(properties)
 		end
 
-        local restoreList = {}
+		local restoreList = {}
 		for propertyAll,fire in pairs(properties) do
 			if self.Properties[propertyAll] then
 				self.Properties[propertyAll] = nil
@@ -288,7 +211,7 @@ Object.__index = Object
 			end
 		end
 
-        return restoreList
+		return restoreList
 	end
 
 	function Object:OnEvent(packageName : Instance | string)
@@ -297,16 +220,16 @@ Object.__index = Object
 		if self.Connections[PackageName] then
 			return self:GetPackage(PackageName)
 		else
-		if PackageName == nil or type(PackageName) ~= "string" or PackageName:gsub(" ","") == "" or self.Connections[PackageName] ~= nil then
+			if PackageName == nil or type(PackageName) ~= "string" or PackageName:gsub(" ","") == "" or self.Connections[PackageName] ~= nil then
 				warn('Package "'..tostring(PackageName)..'" must have a unique name')
 				return {}
 			else
-                self.Connections[PackageName] = {}
+				self.Connections[PackageName] = {}
 				local Package = GetPackageData(self,PackageName)
 
 				return function (data)
 					Package.new(data)
-                    return Package
+					return Package
 				end
 			end
 		end
@@ -322,20 +245,20 @@ Object.__index = Object
 	end
 
 	function Object:ManualUpdate(properties : {any})
-        if typeof(properties) ~= "table" then return end
+		if typeof(properties) ~= "table" then return end
 
 		local removeList = {}
 		for propertyAll,fire in pairs(getTable(properties)) do
 			if hasProperty(self.assignedInstance,propertyAll) then
 				--already assigned property, so it just gets activated
 				if self.Properties[propertyAll] and fire == nil and type(self.Properties[propertyAll][1]) == "function" then
-				    PropertyInit(self,{[propertyAll] = self.Properties[propertyAll][1]},"PreAssigned")
-                    removeList[propertyAll] = self.Properties[propertyAll][1]
-				--custom function, stores previous function if there is one
+					PropertyInit(self,{[propertyAll] = self.Properties[propertyAll][1]},"PreAssigned")
+					removeList[propertyAll] = self.Properties[propertyAll][1]
+					--custom function, stores previous function if there is one
 				else
 					local custom = self.Properties[propertyAll] and self.Properties[propertyAll][1] or nil
 					PropertyInit(self,{[propertyAll] = fire},custom)
-					removeList[propertyAll] = fire				
+					removeList[propertyAll] = fire		
 				end
 			else
 				warn('"'..tostring(propertyAll)..'" is not a property of '..self.assignedInstance)	
@@ -346,27 +269,27 @@ Object.__index = Object
 	end
 
 	function Object:Restore(previouslyRemoved,Parent : Instance?)
-        if not previouslyRemoved then
-            warn("Cannot restore Object because it is nil")
-        elseif self.assignedInstance ~= nil then
-            warn("Cannot restore because Object is not nil") 
-        elseif typeof(previouslyRemoved) ~= "Instance" then
-            warn("Object restoration must be an Instance")
-        else
-            local restoration = previouslyRemoved:Clone()
-		    local parent = typeof(Parent) == "Instance"  and Parent or previouslyRemoved.Parent
-            if previouslyRemoved.Parent == nil then
-			    if restoration then
-				    restoration:Destroy()
-			    end
-            else
-                restoration.Parent = parent
-                CollectionService:AddTag(restoration,self.identification)
-                self.assignedInstance = restoration
-                Object.Contents[self.__data.name or restoration] = self
-            end
-        end
-    end
+		if not previouslyRemoved then
+			warn("Cannot restore Object because it is nil")
+		elseif self.assignedInstance ~= nil then
+			warn("Cannot restore because Object is not nil") 
+		elseif typeof(previouslyRemoved) ~= "Instance" then
+			warn("Object restoration must be an Instance")
+		else
+			local restoration = previouslyRemoved:Clone()
+			local parent = typeof(Parent) == "Instance"  and Parent or previouslyRemoved.Parent
+			if previouslyRemoved.Parent == nil then
+				if restoration then
+					restoration:Destroy()
+				end
+			else
+				restoration.Parent = parent
+				CollectionService:AddTag(restoration,self.identification)
+				self.assignedInstance = restoration
+				Object.Contents[self.__data.name or restoration] = self
+			end
+		end
+	end
 
 	function Object:Pause()
 		if not self.assignedInstance then return end
@@ -374,7 +297,7 @@ Object.__index = Object
 	end
 
 	function Object:UnPause()
-        if not self.assignedInstance then return end
+		if not self.assignedInstance then return end
 		self.isrunning = true
 	end
 

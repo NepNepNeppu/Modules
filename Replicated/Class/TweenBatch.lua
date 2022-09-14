@@ -18,7 +18,7 @@ API:
         Returns if a property can be tweened in an instance
     Tween:Create(instance dictionary, tweeninfo, tween dictionary)
         Creates tween objects to been tweened
-    Tween:Import(tween dictionary)
+    Tween:require(tween dictionary)
         Adds premade tweens to been tweened
     Tween:Reschedule()
         None
@@ -69,7 +69,7 @@ Tween.__index = Tween
         end
     end
 
-    function Tween:Import(tweens : {[number] : Tween})
+    function Tween:require(tweens : {[number] : Tween})
         for _,tween in pairs(tweens) do
             table.insert(self.tweens,tween)
         end
