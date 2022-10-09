@@ -37,20 +37,20 @@ local Links = {}
         return self
     end
 
-    function InstanceLink:AddLink(item : any,warn : boolean?)
+    function InstanceLink:AddLink(item : any,callback : boolean?)
         if self:HasLink(item) == false then
             table.insert(self.Links,item)
-        elseif warn and warn == true then
-            warn(string.format("Attempt to link %s to core:[%s] but it is already linked.",tostring(item),tostring(self.coreLink)))
+        elseif callback and callback == true then
+            warn(string.format("Attempt to link %s to core:[%s] but it is already linked.",item,self.coreLink))
         end
     end
 
-    function InstanceLink:RemoveLink(item : any,warn : boolean?)
+    function InstanceLink:RemoveLink(item : any,callback : boolean?)
         local isLinked,Item = self:HasLink(item)
         if isLinked then
             table.remove(self.Links,table.find(self.Links,Item))
-        elseif warn and warn == true then
-            warn(string.format("Attempt to remove %s from core:[%s] but it does not exist.",tostring(item),tostring(self.coreLink)))
+        elseif callback and callback == true then
+            warn(string.format("Attempt to remove %s from core:[%s] but it does not exist.",item,self.coreLink))
         end
     end
 
