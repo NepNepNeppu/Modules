@@ -1,3 +1,17 @@
+--[[EX:
+    local forgeLink = InstanceLink.new(game.Workspace)
+    forgeLink:AddLink("string",true) --boolean checks for duplicates and warns if true, if its blank will be false and it warn about duplicates
+    forgeLink:AddLink(game.Workspace.Part)
+
+    local retrieveLink = InstanceLink.GetLink(game.Workspace)
+    retrieveLink:RemoveLink(game.Workspace.Part,true)
+    retrieveLink:RemoveLink(game.Workspace.Part,true) --warn because it does not exist
+
+    local isLinked, item = retrieveLink:HasLink("string")
+    print(isLinked, item)
+]]
+
+
 local InstanceLink = {}
 InstanceLink.__index = InstanceLink
 
