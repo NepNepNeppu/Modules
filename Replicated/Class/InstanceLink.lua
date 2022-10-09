@@ -41,7 +41,7 @@ local Links = {}
         if self:HasLink(item) == false then
             table.insert(self.Links,item)
         elseif callback and callback == true then
-            warn(string.format("Attempt to link %s to core:[%s] but it is already linked.",tostring(item),tostring(self.coreLink)))
+            warn(string.format("Attempt to link link:[%s] to core:[%s] but it is already linked.",tostring(item),tostring(self.coreLink)))
         end
     end
 
@@ -50,7 +50,7 @@ local Links = {}
         if isLinked then
             table.remove(self.Links,table.find(self.Links,Item))
         elseif callback and callback == true then
-            warn(string.format("Attempt to remove %s from core:[%s] but it does not exist.",tostring(item),tostring(self.coreLink)))
+            warn(string.format("Attempt to remove link:[%s] from core:[%s] but it does not exist.",tostring(item),tostring(self.coreLink)))
         end
     end
 
