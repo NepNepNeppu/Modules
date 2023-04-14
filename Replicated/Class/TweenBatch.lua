@@ -2,7 +2,7 @@
 class Tween
 Description:
 	Tweening Module used to manipulate one or multiple tweens at once
-    Classic tweening with a new implementations
+    Classic tweening with new implementations
 API:
 	Tween = Tween.new()
 		Creates a new tween object
