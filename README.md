@@ -1,2 +1,2 @@
 # Modules
- Cool modules I've made
+ No credits needed unless you wanna be cool
